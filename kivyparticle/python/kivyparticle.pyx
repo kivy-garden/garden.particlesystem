@@ -1,19 +1,18 @@
-# -*- coding: utf-8 -*-
-
+import kivy
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
-from kivy.graphics import Rectangle, Color, Callback, Rotate, PushMatrix, PopMatrix, Translate, Quad
+from kivy.graphics import Rectangle, Color, Callback, Rotate, PushMatrix, PopMatrix, Translate, Quad, Scale
 from kivy.graphics.opengl import glBlendFunc, GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_DST_COLOR, GL_ONE_MINUS_DST_COLOR
 from kivy.core.image import Image
+import random
 from xml.dom.minidom import parse as parse_xml
-from .utils import random_variance, random_color_variance
 from kivy.properties import NumericProperty, BooleanProperty, ListProperty, StringProperty, ObjectProperty, BoundedNumericProperty
-
+from kivy.vector import Vector
 import sys
 import math
 import os
+import cython
 
-__all__ = ['EMITTER_TYPE_GRAVITY', 'EMITTER_TYPE_RADIAL', 'Particle', 'ParticleSystem']
 
 
 EMITTER_TYPE_GRAVITY = 0
@@ -31,18 +30,167 @@ BLEND_FUNC = {0: GL_ZERO,
             0x307: GL_ONE_MINUS_DST_COLOR
 }
 
+cdef double random_variance(float base, float variance):
+    return base + variance * (random.random() * 2.0 - 1.0)
 
-class Particle(object):
-    x, y, rotation, current_time = -256, -256, 0, 0
-    scale, total_time = 1.0, 0.
-    color = [1.0, 1.0, 1.0, 1.0]
-    color_delta = [0.0, 0.0, 0.0, 0.0]
-    start_x, start_y, velocity_x, velocity_y = 0, 0, 0, 0
-    radial_acceleration, tangent_acceleration = 0, 0
-    emit_radius, emit_radius_delta = 0, 0
-    emit_rotation, emit_rotation_delta = 0, 0
-    rotation_delta, scale_delta = 0, 0
 
+cdef list random_color_variance(list base, list variance):
+    return [min(max(0.0, (random_variance(base[i], variance[i]))), 1.0) for i in range(4)]
+
+
+cdef class Particle:
+    cdef double x
+    cdef double y
+    cdef double rotation
+    cdef double current_time
+    cdef double scale
+    cdef double total_time
+    cdef double start_x
+    cdef double start_y
+    cdef double velocity_x
+    cdef double velocity_y
+    cdef double radial_acceleration
+    cdef double tangent_acceleration
+    cdef double emit_radius
+    cdef double emit_radius_delta
+    cdef double emit_rotation
+    cdef double emit_rotation_delta
+    cdef double rotation_delta
+    cdef double scale_delta
+    cdef list color
+    cdef list color_delta 
+
+    def __cinit__(self):
+        x, y, rotation, current_time = -256, -256, 0, 0
+        scale, total_time = 1.0, 0.
+        start_x, start_y, velocity_x, velocity_y = 0, 0, 0, 0
+        radial_acceleration, tangent_acceleration = 0, 0
+        emit_radius, emit_radius_delta = 0, 0
+        emit_rotation, emit_rotation_delta = 0, 0
+        rotation_delta, scale_delta = 0, 0
+        color = [1.0, 1.0, 1.0, 1.0]
+        color_delta = [0.0, 0.0, 0.0, 0.0]
+        
+
+    property color:
+        def __get__(self):
+            return self.color
+        def __set__(self, value):
+            self.color = value
+
+    property color_delta:
+        def __get__(self):
+            return self.color_delta
+        def __set__(self, value):
+            self.color_delta = value
+
+    property current_time:
+        def __get__(self):
+            return self.current_time
+        def __set__(self, value):
+            self.current_time = value
+
+    property total_time:
+        def __get__(self):
+            return self.total_time
+        def __set__(self, value):
+            self.total_time = value
+
+    property x:
+        def __get__(self):
+            return self.x
+        def __set__(self, value):
+            self.x = value
+
+    property y:
+        def __get__(self):
+            return self.y
+        def __set__(self, value):
+            self.y = value
+
+    property rotation:
+        def __get__(self):
+            return self.rotation
+        def __set__(self, value):
+            self.rotation = value
+
+    property scale:
+        def __get__(self):
+            return self.scale
+        def __set__(self, value):
+            self.scale = value
+
+    property start_x:
+        def __get__(self):
+            return self.start_x
+        def __set__(self, value):
+            self.start_x = value
+
+    property start_y:
+        def __get__(self):
+            return self.start_y
+        def __set__(self, value):
+            self.start_y = value
+
+    property velocity_x:
+        def __get__(self):
+            return self.velocity_x
+        def __set__(self, value):
+            self.velocity_x = value
+
+    property velocity_y:
+        def __get__(self):
+            return self.velocity_y
+        def __set__(self, value):
+            self.velocity_y = value
+
+    property radial_acceleration:
+        def __get__(self):
+            return self.radial_acceleration
+        def __set__(self, value):
+            self.radial_acceleration = value
+
+    property tangent_acceleration:
+        def __get__(self):
+            return self.tangent_acceleration
+        def __set__(self, value):
+            self.tangent_acceleration = value
+
+    property emit_radius:
+        def __get__(self):
+            return self.emit_radius
+        def __set__(self, value):
+            self.emit_radius = value
+
+    property emit_radius_delta:
+        def __get__(self):
+            return self.emit_radius_delta
+        def __set__(self, value):
+            self.emit_radius_delta = value
+
+    property emit_rotation:
+        def __get__(self):
+            return self.emit_rotation
+        def __set__(self, value):
+            self.emit_rotation = value
+
+    property emit_rotation_delta:
+        def __get__(self):
+            return self.emit_rotation_delta
+        def __set__(self, value):
+            self.emit_rotation_delta = value
+            
+    property rotation_delta:
+        def __get__(self):
+            return self.rotation_delta
+        def __set__(self, value):
+            self.rotation_delta = value
+
+    property scale_delta:
+        def __get__(self):
+            return self.scale_delta
+        def __set__(self, value):
+            self.scale_delta = value
 
 class ParticleSystem(Widget):
     max_num_particles = NumericProperty(200)
@@ -79,8 +227,10 @@ class ParticleSystem(Widget):
     start_color_variance = ListProperty([1.,1.,1.,1.])
     end_color = ListProperty([1.,1.,1.,1.])
     end_color_variance = ListProperty([1.,1.,1.,1.])
-    blend_factor_source = NumericProperty(770)
-    blend_factor_dest = NumericProperty(1)
+    blend_factor_source = NumericProperty(GL_SRC_ALPHA)
+    blend_factor_dest = NumericProperty(GL_ONE)
+    reset_blend_factor_source = NumericProperty(GL_SRC_ALPHA)
+    reset_blend_factor_dest = NumericProperty(GL_ONE_MINUS_SRC_ALPHA)
     emitter_type = NumericProperty(0)
 
     update_interval = NumericProperty(1./30.)
@@ -116,8 +266,11 @@ class ParticleSystem(Widget):
         self.emission_time = 0.0
         if clear:
             self.num_particles = 0
+            Clock.unschedule(self._update)
             self.particles_dict = dict()
+            self.particles = []
             self.canvas.clear()
+            
 
     def on_max_num_particles(self, instance, value):
         self.max_capacity = value
@@ -128,9 +281,9 @@ class ParticleSystem(Widget):
         self.emission_rate = self.max_num_particles/self.life_span
 
     def on_texture(self,instance,value):
-        for p in self.particles:
+        for particle in self.particles:
             try:
-                self.particles_dict[p]['rect'].texture = self.texture
+                self.particles_dict[particle]['rect'].texture = self.texture
             except KeyError:
                 # if particle isn't initialized yet, you can't change its texture.
                 pass
@@ -139,19 +292,16 @@ class ParticleSystem(Widget):
         self.emission_rate = self.max_num_particles/value
 
     def _set_blend_func(self, instruction):
-        #glBlendFunc(self.blend_factor_source, self.blend_factor_dest)
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE)
+        glBlendFunc(self.blend_factor_source, self.blend_factor_dest)
 
     def _reset_blend_func(self, instruction):
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glBlendFunc(self.reset_blend_factor_source, self.reset_blend_factor_dest)
+
 
     def _parse_config(self, config):
         self._config = parse_xml(config)
         self.texture_path = self._parse_data('texture', 'name')
         self.texture = Image(self.texture_path).texture
-        # self.emitter_x = float(self._parse_data('sourcePosition', 'x'))
-        # self.emitter_y = float(self._parse_data('sourcePosition', 'y'))
         self.emitter_x_variance = float(self._parse_data('sourcePositionVariance', 'x'))
         self.emitter_y_variance = float(self._parse_data('sourcePositionVariance', 'y'))
         self.gravity_x = float(self._parse_data('gravity', 'x'))
@@ -205,7 +355,7 @@ class ParticleSystem(Widget):
         self._is_paused = False
         Clock.schedule_once(self._update, self.update_interval)
 
-    def _update(self, dt):
+    def _update(self, float dt):
         self._advance_time(dt)
         self._render()
         if not self._is_paused:
@@ -214,21 +364,20 @@ class ParticleSystem(Widget):
     def _create_particle(self):
         return Particle()
 
-    def _init_particle(self, particle):
-        life_span = random_variance(self.life_span, self.life_span_variance)
+    def _init_particle(self, Particle particle):
+        cdef double life_span = random_variance(self.life_span, self.life_span_variance)
         if life_span <= 0.0:
             return
 
         particle.current_time = 0.0
         particle.total_time = life_span
+        particle.x = random_variance(self.pos[0], self.emitter_x_variance)
+        particle.y = random_variance(self.pos[1], self.emitter_y_variance)
+        particle.start_x = self.pos[0]
+        particle.start_y = self.pos[1]
 
-        particle.x = random_variance(self.emitter_x, self.emitter_x_variance)
-        particle.y = random_variance(self.emitter_y, self.emitter_y_variance)
-        particle.start_x = self.emitter_x
-        particle.start_y = self.emitter_y
-
-        angle = random_variance(self.emit_angle, self.emit_angle_variance)
-        speed = random_variance(self.speed, self.speed_variance)
+        cdef double angle = random_variance(self.emit_angle, self.emit_angle_variance)
+        cdef double speed = random_variance(self.speed, self.speed_variance)
         particle.velocity_x = speed * math.cos(angle)
         particle.velocity_y = speed * math.sin(angle)
 
@@ -241,8 +390,8 @@ class ParticleSystem(Widget):
         particle.radial_acceleration = random_variance(self.radial_acceleration, self.radial_acceleration_variance)
         particle.tangent_acceleration = random_variance(self.tangential_acceleration, self.tangential_acceleration_variance)
 
-        start_size = random_variance(self.start_size, self.start_size_variance)
-        end_size = random_variance(self.end_size, self.end_size_variance)
+        cdef double start_size = random_variance(self.start_size, self.start_size_variance)
+        cdef double end_size = random_variance(self.end_size, self.end_size_variance)
 
         start_size = max(0.1, start_size)
         end_size = max(0.1, end_size)
@@ -251,55 +400,60 @@ class ParticleSystem(Widget):
         particle.scale_delta = ((end_size - start_size) / life_span) / self.texture.width
 
         # colors
-        start_color = random_color_variance(self.start_color, self.start_color_variance)
-        end_color = random_color_variance(self.end_color, self.end_color_variance)
+        cdef list start_color = random_color_variance(self.start_color[:], self.start_color_variance[:])
+        cdef list end_color = random_color_variance(self.end_color[:], self.end_color_variance[:])
 
         particle.color_delta = [(end_color[i] - start_color[i]) / life_span for i in range(4)]
         particle.color = start_color
 
         # rotation
-        start_rotation = random_variance(self.start_rotation, self.start_rotation_variance)
-        end_rotation = random_variance(self.end_rotation, self.end_rotation_variance)
+        cdef double start_rotation = random_variance(self.start_rotation, self.start_rotation_variance)
+        cdef double end_rotation = random_variance(self.end_rotation, self.end_rotation_variance)
         particle.rotation = start_rotation
         particle.rotation_delta = (end_rotation - start_rotation) / life_span
 
-    def _advance_particle(self, particle, passed_time):
+    def _advance_particle_gravity(self, Particle particle, float passed_time):
+        cdef double distance_x = particle.x - particle.start_x
+        cdef double distance_y = particle.y - particle.start_y
+        cdef tuple start_pos = (particle.start_x, particle.start_y)
+        cdef tuple current_pos = (particle.x, particle.y)
+        cdef double distance_scalar = Vector(current_pos).distance(start_pos)
+        if distance_scalar < 0.01:
+            distance_scalar = 0.01
+
+        cdef double radial_x = distance_x / distance_scalar
+        cdef double radial_y = distance_y / distance_scalar
+        cdef double tangential_x = radial_x
+        cdef double tangential_y = radial_y
+
+        radial_x *= particle.radial_acceleration
+        radial_y *= particle.radial_acceleration
+
+        cdef double new_y = tangential_x
+        tangential_x = -tangential_y * particle.tangent_acceleration
+        tangential_y = new_y * particle.tangent_acceleration
+
+        particle.velocity_x += passed_time * (self.gravity_x + radial_x + tangential_x)
+        particle.velocity_y += passed_time * (self.gravity_y + radial_y + tangential_y)
+
+        particle.x += particle.velocity_x * passed_time
+        particle.y += particle.velocity_y * passed_time
+
+    def _advance_particle(self, Particle particle, float passed_time):
         passed_time = min(passed_time, particle.total_time - particle.current_time)
         particle.current_time += passed_time
 
         if self.emitter_type == EMITTER_TYPE_RADIAL:
             particle.emit_rotation += particle.emit_rotation_delta * passed_time
             particle.emit_radius -= particle.emit_radius_delta * passed_time
-            particle.x = self.emitter_x - math.cos(particle.emit_rotation) * particle.emit_radius
-            particle.y = self.emitter_y - math.sin(particle.emit_rotation) * particle.emit_radius
+            particle.x = self.pos[0] - math.cos(particle.emit_rotation) * particle.emit_radius
+            particle.y = self.pos[1] - math.sin(particle.emit_rotation) * particle.emit_radius
 
             if particle.emit_radius < self.min_radius:
                 particle.current_time = particle.total_time
 
         else:
-            distance_x = particle.x - particle.start_x
-            distance_y = particle.y - particle.start_y
-            distance_scalar = math.sqrt(distance_x * distance_x + distance_y * distance_y)
-            if distance_scalar < 0.01:
-                distance_scalar = 0.01
-
-            radial_x = distance_x / distance_scalar
-            radial_y = distance_y / distance_scalar
-            tangential_x = radial_x
-            tangential_y = radial_y
-
-            radial_x *= particle.radial_acceleration
-            radial_y *= particle.radial_acceleration
-
-            new_y = tangential_x
-            tangential_x = -tangential_y * particle.tangent_acceleration
-            tangential_y = new_y * particle.tangent_acceleration
-
-            particle.velocity_x += passed_time * (self.gravity_x + radial_x + tangential_x)
-            particle.velocity_y += passed_time * (self.gravity_y + radial_y + tangential_y)
-
-            particle.x += particle.velocity_x * passed_time
-            particle.y += particle.velocity_y * passed_time
+            self._advance_particle_gravity(particle, passed_time)
 
         particle.scale += particle.scale_delta * passed_time
         particle.rotation += particle.rotation_delta * passed_time
@@ -322,15 +476,23 @@ class ParticleSystem(Widget):
         
         for i in range(int(old_capacity - new_capacity)):
             try:
-                self.canvas.remove(self.particles_dict[self.particles.pop()]['rect'])
+                self.remove_particle()
             except: 
                 pass
 
         self.num_particles = int(new_capacity)
         self.capacity = new_capacity
 
+    def remove_particle(self):
+        particle_to_remove = self.particles.pop()
+        self.canvas.remove(self.particles_dict[particle_to_remove]['rect'])
+        for each_instruction in self.particles_dict[particle_to_remove]:
+            del each_instruction
+        del self.particles_dict[particle_to_remove]
 
-    def _advance_time(self, passed_time):
+
+
+    def _advance_time(self, float passed_time):
         particle_index = 0
 
         # advance existing particles
@@ -340,6 +502,7 @@ class ParticleSystem(Widget):
                 self._advance_particle(particle, passed_time)
                 particle_index += 1
             else:
+
                 if particle_index != self.num_particles - 1:
                     next_particle = self.particles[self.num_particles - 1]
                     self.particles[self.num_particles - 1] = particle
@@ -348,16 +511,13 @@ class ParticleSystem(Widget):
                 if self.num_particles == 0:
                     print 'COMPLETE'
 
-        # create and advance new particles
+        # reinit new particles
         if self.emission_time > 0:
             time_between_particles = 1.0 / self.emission_rate
             self.frame_time += passed_time
 
             while self.frame_time > 0:
                 if self.num_particles < self.max_capacity:
-                    if self.num_particles == self.capacity:
-                        self._raise_capacity(self.capacity)
-
                     particle = self.particles[self.num_particles]
                     self.num_particles += 1
                     self._init_particle(particle)
@@ -371,28 +531,31 @@ class ParticleSystem(Widget):
     def _render(self):
         if self.num_particles == 0:
             return
+        particles_dict = self.particles_dict
+        particles = self.particles
+        texture = self.texture
         for i in range(self.num_particles):
-            particle = self.particles[i]
-            size = (self.texture.size[0] * particle.scale, self.texture.size[1] * particle.scale)
-            if particle not in self.particles_dict:
-                self.particles_dict[particle] = dict()
+            particle = particles[i]
+            size = texture.size[0]*.5, texture.size[1]*.5
+            if particle not in particles_dict:
+                particles_dict[particle] = current_particle = dict()
                 color = particle.color[:]
                 with self.canvas:
-                    self.particles_dict[particle]['color'] = Color(color[0], color[1], color[2], color[3])
+                    current_particle['color'] = Color(color[0], color[1], color[2], color[3])
                     PushMatrix()
-                    self.particles_dict[particle]['translate'] = Translate()
-                    self.particles_dict[particle]['rotate'] = Rotate()
-                    self.particles_dict[particle]['rotate'].set(particle.rotation, 0, 0, 1)
-                    self.particles_dict[particle]['rect'] = Quad(texture=self.texture, points=(-size[0] * 0.5, -size[1] * 0.5, 
-                        size[0] * 0.5,  -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, 
-                        -size[0] * 0.5,  size[1] * 0.5))    
-                    self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                    current_particle['translate'] = Translate()
+                    current_particle['scale'] = Scale(particle.scale)
+                    current_particle['rotate'] = Rotate()
+                    current_particle['rotate'].set(particle.rotation, 0, 0, 1)
+                    current_particle['rect'] = Quad(texture=texture, points=(-size[0], -size[1], 
+                        size[0],  -size[1], size[0],  size[1], -size[0],  size[1]))    
+                    current_particle['translate'].xy = (particle.x, particle.y)
                     PopMatrix()
                     
             else:
-                self.particles_dict[particle]['rotate'].angle = particle.rotation
-                self.particles_dict[particle]['translate'].xy = (particle.x, particle.y)
-                self.particles_dict[particle]['color'].rgba = particle.color
-                self.particles_dict[particle]['rect'].points = (-size[0] * 0.5, -size[1] * 0.5, 
-                        size[0] * 0.5,  -size[1] * 0.5, size[0] * 0.5,  size[1] * 0.5, 
-                        -size[0] * 0.5,  size[1] * 0.5) 
+                particles_dict[particle]['rotate'].angle = particle.rotation
+                particles_dict[particle]['scale'].scale = particle.scale
+                particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                particles_dict[particle]['color'].rgba = particle.color
+                
+
