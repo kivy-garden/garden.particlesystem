@@ -232,6 +232,7 @@ class ParticleSystem(Widget):
     reset_blend_factor_source = NumericProperty(GL_SRC_ALPHA)
     reset_blend_factor_dest = NumericProperty(GL_ONE_MINUS_SRC_ALPHA)
     emitter_type = NumericProperty(0)
+    current_scroll = ListProperty((0, 0))
 
     update_interval = NumericProperty(1./30.)
     _is_paused = BooleanProperty(False)
@@ -528,12 +529,15 @@ class ParticleSystem(Widget):
             if self.emission_time != sys.maxint:
                 self.emission_time = max(0.0, self.emission_time - passed_time)
 
+
+
     def _render(self):
         if self.num_particles == 0:
             return
         particles_dict = self.particles_dict
         particles = self.particles
         texture = self.texture
+        current_scroll = self.current_scroll
         for i in range(self.num_particles):
             particle = particles[i]
             size = texture.size[0]*.5, texture.size[1]*.5
@@ -550,13 +554,23 @@ class ParticleSystem(Widget):
                     current_particle['rotate'].set(particle.rotation, 0, 0, 1)
                     current_particle['rect'] = Quad(texture=texture, points=(-size[0], -size[1], 
                         size[0],  -size[1], size[0],  size[1], -size[0],  size[1]))    
-                    current_particle['translate'].xy = (particle.x, particle.y)
+                    current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
                     PopMatrix()
                     
             else:
                 particles_dict[particle]['rotate'].angle = particle.rotation
                 particles_dict[particle]['scale'].scale = particle.scale
-                particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
                 particles_dict[particle]['color'].rgba = particle.color
+
+    def update_all_particles_with_scrolling(self):
+        if self.num_particles == 0:
+            return
+        particles_dict = self.particles_dict
+        particles = self.particles
+        current_scroll = self.current_scroll
+        for index in range(self.num_particles):
+            particle = particles[index]
+            particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
                 
 
