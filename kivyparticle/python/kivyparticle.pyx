@@ -232,7 +232,6 @@ class ParticleSystem(Widget):
     reset_blend_factor_source = NumericProperty(GL_SRC_ALPHA)
     reset_blend_factor_dest = NumericProperty(GL_ONE_MINUS_SRC_ALPHA)
     emitter_type = NumericProperty(0)
-    current_scroll = ListProperty((0, 0))
 
     update_interval = NumericProperty(1./30.)
     _is_paused = BooleanProperty(False)
@@ -349,13 +348,8 @@ class ParticleSystem(Widget):
         value = int(self._parse_data(name))
         return BLEND_FUNC[value]
 
-    def pause(self, with_clear = False):
+    def pause(self):
         self._is_paused = True
-        if with_clear:
-            particles = self.particles
-            for particle in particles:
-                particle.current_time = particle.total_time
-            Clock.schedule_once(self._update)
 
     def resume(self):
         self._is_paused = False
@@ -508,16 +502,11 @@ class ParticleSystem(Widget):
                 self._advance_particle(particle, passed_time)
                 particle_index += 1
             else:
-                try: 
-                    self.particles_dict[particle]['translate'].xy = (-1000, -1000)
-                except:
-                    print 'not rendered yet'
-                if particle_index != self.num_particles - 1:
 
+                if particle_index != self.num_particles - 1:
                     next_particle = self.particles[self.num_particles - 1]
                     self.particles[self.num_particles - 1] = particle
                     self.particles[particle_index] = next_particle
-
                 self.num_particles -= 1
                 if self.num_particles == 0:
                     print 'COMPLETE'
@@ -539,15 +528,12 @@ class ParticleSystem(Widget):
             if self.emission_time != sys.maxint:
                 self.emission_time = max(0.0, self.emission_time - passed_time)
 
-
-
     def _render(self):
         if self.num_particles == 0:
             return
         particles_dict = self.particles_dict
         particles = self.particles
         texture = self.texture
-        current_scroll = self.current_scroll
         for i in range(self.num_particles):
             particle = particles[i]
             size = texture.size[0]*.5, texture.size[1]*.5
@@ -559,33 +545,19 @@ class ParticleSystem(Widget):
                     PushMatrix()
                     current_particle['color'] = Color(color[0], color[1], color[2], color[3])
                     current_particle['translate'] = Translate()
-                    current_particle['scale'] = Scale(particle.scale)
+                    current_particle['scale'] = Scale(x = particle.scale, y = particle.scale)
                     current_particle['rotate'] = Rotate()
                     current_particle['rotate'].set(particle.rotation, 0, 0, 1)
                     current_particle['rect'] = Quad(texture=texture, points=(-size[0], -size[1], 
                         size[0],  -size[1], size[0],  size[1], -size[0],  size[1]))    
-                    current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+                    current_particle['translate'].xy = (particle.x, particle.y)
                     PopMatrix()
                     
             else:
-                current_particle = particles_dict[particle]
-                current_particle['rotate'].angle = particle.rotation
-                current_particle['scale'].scale = particle.scale
-
-                current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
-                current_particle['color'].rgba = particle.color
-
-                    
-
-
-    def update_all_particles_with_scrolling(self):
-        if self.num_particles == 0:
-            return
-        particles_dict = self.particles_dict
-        particles = self.particles
-        current_scroll = self.current_scroll
-        for index in range(self.num_particles):
-            particle = particles[index]
-            particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+                particles_dict[particle]['rotate'].angle = particle.rotation
+                particles_dict[particle]['scale'].x = particle.scale
+                particles_dict[particle]['scale'].y = particle.scale
+                particles_dict[particle]['translate'].xy = (particle.x, particle.y)
+                particles_dict[particle]['color'].rgba = particle.color
                 
 
