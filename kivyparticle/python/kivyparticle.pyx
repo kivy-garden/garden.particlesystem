@@ -349,8 +349,13 @@ class ParticleSystem(Widget):
         value = int(self._parse_data(name))
         return BLEND_FUNC[value]
 
-    def pause(self):
+    def pause(self, with_clear = False):
         self._is_paused = True
+        if with_clear:
+            particles = self.particles
+            for particle in particles:
+                particle.current_time = particle.total_time
+            Clock.schedule_once(self._update)
 
     def resume(self):
         self._is_paused = False
@@ -503,11 +508,16 @@ class ParticleSystem(Widget):
                 self._advance_particle(particle, passed_time)
                 particle_index += 1
             else:
-
+                try: 
+                    self.particles_dict[particle]['translate'].xy = (-1000, -1000)
+                except:
+                    print 'not rendered yet'
                 if particle_index != self.num_particles - 1:
+
                     next_particle = self.particles[self.num_particles - 1]
                     self.particles[self.num_particles - 1] = particle
                     self.particles[particle_index] = next_particle
+
                 self.num_particles -= 1
                 if self.num_particles == 0:
                     print 'COMPLETE'
@@ -558,10 +568,15 @@ class ParticleSystem(Widget):
                     PopMatrix()
                     
             else:
-                particles_dict[particle]['rotate'].angle = particle.rotation
-                particles_dict[particle]['scale'].scale = particle.scale
-                particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
-                particles_dict[particle]['color'].rgba = particle.color
+                current_particle = particles_dict[particle]
+                current_particle['rotate'].angle = particle.rotation
+                current_particle['scale'].scale = particle.scale
+
+                current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+                current_particle['color'].rgba = particle.color
+
+                    
+
 
     def update_all_particles_with_scrolling(self):
         if self.num_particles == 0:
