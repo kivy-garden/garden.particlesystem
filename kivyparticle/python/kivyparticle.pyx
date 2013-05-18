@@ -559,7 +559,7 @@ class ParticleSystem(Widget):
                     PushMatrix()
                     current_particle['color'] = Color(color[0], color[1], color[2], color[3])
                     current_particle['translate'] = Translate()
-                    current_particle['scale'] = Scale(particle.scale)
+                    current_particle['scale'] = Scale(x=particle.scale, y=particle.scale)
                     current_particle['rotate'] = Rotate()
                     current_particle['rotate'].set(particle.rotation, 0, 0, 1)
                     current_particle['rect'] = Quad(texture=texture, points=(-size[0], -size[1], 
@@ -570,20 +570,17 @@ class ParticleSystem(Widget):
             else:
                 current_particle = particles_dict[particle]
                 current_particle['rotate'].angle = particle.rotation
-                current_particle['scale'].scale = particle.scale
-
+                current_particle['scale'].x = particle.scale
+                current_particle['scale'].y = particle.scale
                 current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
                 current_particle['color'].rgba = particle.color
 
-                    
-
-
-    def update_all_particles_with_scrolling(self):
+    def on_current_scroll(self, instance, value):
         if self.num_particles == 0:
             return
         particles_dict = self.particles_dict
         particles = self.particles
-        current_scroll = self.current_scroll
+        current_scroll = value
         for index in range(self.num_particles):
             particle = particles[index]
             particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
