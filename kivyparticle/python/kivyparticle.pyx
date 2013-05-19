@@ -550,7 +550,6 @@ class ParticleSystem(Widget):
         current_scroll = self.current_scroll
         for i in range(self.num_particles):
             particle = particles[i]
-            size = texture.size[0]*.5, texture.size[1]*.5
             if particle not in particles_dict:
                 particles_dict[particle] = current_particle = dict()
                 color = particle.color[:]
