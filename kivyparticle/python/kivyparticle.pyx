@@ -1,7 +1,7 @@
 import kivy
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
-from kivy.graphics import Rectangle, Color, Callback, Rotate, PushMatrix, PopMatrix, Translate, Quad, Scale
+from kivy.graphics import Color, Callback, Rotate, PushMatrix, PopMatrix, Translate, Quad, Scale, Point
 from kivy.graphics.opengl import glBlendFunc, GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_DST_COLOR, GL_ONE_MINUS_DST_COLOR
 from kivy.core.image import Image
 import random
@@ -402,8 +402,8 @@ class ParticleSystem(Widget):
         start_size = max(0.1, start_size)
         end_size = max(0.1, end_size)
 
-        particle.scale = start_size / self.texture.width
-        particle.scale_delta = ((end_size - start_size) / life_span) / self.texture.width
+        particle.scale = start_size / 2.
+        particle.scale_delta = ((end_size - start_size) / life_span) / 2.
 
         # colors
         cdef list start_color = random_color_variance(self.start_color[:], self.start_color_variance[:])
@@ -562,8 +562,7 @@ class ParticleSystem(Widget):
                     current_particle['scale'] = Scale(x=particle.scale, y=particle.scale)
                     current_particle['rotate'] = Rotate()
                     current_particle['rotate'].set(particle.rotation, 0, 0, 1)
-                    current_particle['rect'] = Quad(texture=texture, points=(-size[0], -size[1], 
-                        size[0],  -size[1], size[0],  size[1], -size[0],  size[1]))    
+                    current_particle['rect'] = Point(texture=texture, points=(0,0))   
                     current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
                     PopMatrix()
                     
