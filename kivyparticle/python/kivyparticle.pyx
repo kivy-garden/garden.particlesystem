@@ -15,6 +15,7 @@ import cython
 
 
 
+
 EMITTER_TYPE_GRAVITY = 0
 EMITTER_TYPE_RADIAL = 1
 
