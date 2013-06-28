@@ -1,12 +1,16 @@
 import kivy
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
-from kivy.graphics import Color, Callback, Rotate, PushMatrix, PopMatrix, Translate, Quad, Scale, Point
-from kivy.graphics.opengl import glBlendFunc, GL_SRC_ALPHA, GL_ONE, GL_ZERO, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_DST_COLOR, GL_ONE_MINUS_DST_COLOR
+from kivy.graphics import (Color, Callback, Rotate, PushMatrix, 
+    PopMatrix, Translate, Quad, Scale, Point)
+from kivy.graphics.opengl import (glBlendFunc, GL_SRC_ALPHA, GL_ONE, 
+GL_ZERO, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA, 
+GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_DST_COLOR, GL_ONE_MINUS_DST_COLOR)
 from kivy.core.image import Image
 import random
 from xml.dom.minidom import parse as parse_xml
-from kivy.properties import NumericProperty, BooleanProperty, ListProperty, StringProperty, ObjectProperty, BoundedNumericProperty
+from kivy.properties import (NumericProperty, BooleanProperty, ListProperty, 
+StringProperty, ObjectProperty, BoundedNumericProperty)
 from kivy.vector import Vector
 import sys
 import math
@@ -344,7 +348,8 @@ class ParticleSystem(Widget):
         return self._config.getElementsByTagName(name)[0].getAttribute(attribute)
 
     def _parse_color(self, name):
-        return [float(self._parse_data(name, 'red')), float(self._parse_data(name, 'green')), float(self._parse_data(name, 'blue')), float(self._parse_data(name, 'alpha'))]
+        return [float(self._parse_data(name, 'red')), float(self._parse_data(name, 'green')), 
+        float(self._parse_data(name, 'blue')), float(self._parse_data(name, 'alpha'))]
 
     def _parse_blend(self, name):
         value = int(self._parse_data(name))
@@ -391,11 +396,15 @@ class ParticleSystem(Widget):
         particle.emit_radius = random_variance(self.max_radius, self.max_radius_variance)
         particle.emit_radius_delta = (self.max_radius - self.min_radius) / life_span
 
-        particle.emit_rotation = random_variance(self.emit_angle, self.emit_angle_variance)
-        particle.emit_rotation_delta = random_variance(self.rotate_per_second, self.rotate_per_second_variance)
+        particle.emit_rotation = random_variance(self.emit_angle, 
+            self.emit_angle_variance)
+        particle.emit_rotation_delta = random_variance(self.rotate_per_second, 
+            self.rotate_per_second_variance)
 
-        particle.radial_acceleration = random_variance(self.radial_acceleration, self.radial_acceleration_variance)
-        particle.tangent_acceleration = random_variance(self.tangential_acceleration, self.tangential_acceleration_variance)
+        particle.radial_acceleration = random_variance(self.radial_acceleration, 
+            self.radial_acceleration_variance)
+        particle.tangent_acceleration = random_variance(self.tangential_acceleration, 
+            self.tangential_acceleration_variance)
 
         cdef double start_size = random_variance(self.start_size, self.start_size_variance)
         cdef double end_size = random_variance(self.end_size, self.end_size_variance)
@@ -407,15 +416,19 @@ class ParticleSystem(Widget):
         particle.scale_delta = ((end_size - start_size) / life_span) / 2.
 
         # colors
-        cdef list start_color = random_color_variance(self.start_color[:], self.start_color_variance[:])
-        cdef list end_color = random_color_variance(self.end_color[:], self.end_color_variance[:])
+        cdef list start_color = random_color_variance(self.start_color[:], 
+            self.start_color_variance[:])
+        cdef list end_color = random_color_variance(self.end_color[:], 
+            self.end_color_variance[:])
 
         particle.color_delta = [(end_color[i] - start_color[i]) / life_span for i in range(4)]
         particle.color = start_color
 
         # rotation
-        cdef double start_rotation = random_variance(self.start_rotation, self.start_rotation_variance)
-        cdef double end_rotation = random_variance(self.end_rotation, self.end_rotation_variance)
+        cdef double start_rotation = random_variance(self.start_rotation, 
+            self.start_rotation_variance)
+        cdef double end_rotation = random_variance(self.end_rotation, 
+            self.end_rotation_variance)
         particle.rotation = start_rotation
         particle.rotation_delta = (end_rotation - start_rotation) / life_span
 
@@ -563,7 +576,8 @@ class ParticleSystem(Widget):
                     current_particle['rotate'] = Rotate()
                     current_particle['rotate'].set(particle.rotation, 0, 0, 1)
                     current_particle['rect'] = Point(texture=texture, points=(0,0))   
-                    current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+                    current_particle['translate'].xy = (particle.x + current_scroll[0], 
+                        particle.y + current_scroll[1])
                     PopMatrix()
                     
             else:
@@ -571,7 +585,8 @@ class ParticleSystem(Widget):
                 current_particle['rotate'].angle = particle.rotation
                 current_particle['scale'].x = particle.scale
                 current_particle['scale'].y = particle.scale
-                current_particle['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+                current_particle['translate'].xy = (particle.x + current_scroll[0], 
+                    particle.y + current_scroll[1])
                 current_particle['color'].rgba = particle.color
 
     def on_current_scroll(self, instance, value):
@@ -582,6 +597,7 @@ class ParticleSystem(Widget):
         current_scroll = value
         for index in range(self.num_particles):
             particle = particles[index]
-            particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], particle.y + current_scroll[1])
+            particles_dict[particle]['translate'].xy = (particle.x + current_scroll[0], 
+                particle.y + current_scroll[1])
                 
 
