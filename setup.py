@@ -10,14 +10,16 @@ except ImportError:
 
 if have_cython:
     kivyparticle_files = [
-        'kivyparticle/python/kivyparticle.pyx',
-        ]
+        'particlesystem/python/particlesystem.pyx',
+    ]
     cmdclass = {'build_ext': build_ext}
 else:
-    kivyparticle_files = ['kivyparticle/python/kivyparticle.c',]
+    kivyparticle_files = [
+        'particlesystem/python/particlesystem.c',
+    ]
     cmdclass = {}
 
-ext = Extension('kivyparticle',
+ext = Extension('particlesystem',
     kivyparticle_files, include_dirs=[],
     extra_compile_args=['-std=c99', '-ffast-math'])
 
@@ -25,8 +27,8 @@ if environ.get('READTHEDOCS', None) == 'True':
     ext.pyrex_directives = {'embedsignature': True}
 
 setup(
-    name='kivyparticle',
-    description='Kivy Particle is a Particle Engine compatible with the Starling Particle Engine',
+    name='particlesystem',
+    description='Particle System is based on the Starling Particle System',
     author='Jacob Kovac',
     author_email='kovac1066@gmail.com',
     cmdclass=cmdclass,
