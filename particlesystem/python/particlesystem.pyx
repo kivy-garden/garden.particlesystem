@@ -243,9 +243,9 @@ class ParticleSystem(Widget):
 
 
     def __init__(self, config, **kwargs):
-        super(ParticleSystem, self).__init__(**kwargs)
-        self.capacity = 0
         self.particles = list()
+        
+        self.capacity = 0
         self.particles_dict = dict()
         self.emission_time = 0.0
         self.frame_time = 0.0
@@ -257,6 +257,8 @@ class ParticleSystem(Widget):
         self.initial_capacity = self.max_num_particles
         self.max_capacity = self.max_num_particles
         self._raise_capacity(self.initial_capacity)
+        
+        super(ParticleSystem, self).__init__(**kwargs)
 
         with self.canvas.before:
             Callback(self._set_blend_func)
