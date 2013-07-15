@@ -250,14 +250,10 @@ class ParticleSystem(Widget):
         self.emission_time = 0.0
         self.frame_time = 0.0
         self.num_particles = 0
-
         if config is not None: 
             self._parse_config(config)
         self.emission_rate = self.max_num_particles / self.life_span
-        self.initial_capacity = self.max_num_particles
-        self.max_capacity = self.max_num_particles
-        self._raise_capacity(self.initial_capacity)
-        
+        self.max_capacity = self.max_num_particles        
         super(ParticleSystem, self).__init__(**kwargs)
 
         with self.canvas.before:
@@ -282,9 +278,7 @@ class ParticleSystem(Widget):
             
     def on_max_num_particles(self, instance, value):
         self.max_capacity = value
-        if self.capacity < value:
-            self._raise_capacity(self.max_capacity - self.capacity)
-        elif self.capacity > value:
+        if self.capacity > value:
             self._lower_capacity(self.capacity - self.max_capacity)
         self.emission_rate = self.max_num_particles/self.life_span
 
@@ -519,16 +513,6 @@ class ParticleSystem(Widget):
         particle.color = [particle.color[i] + particle.color_delta[i] * 
             passed_time for i in range(4)]
 
-    def _raise_capacity(self, by_amount):
-        old_capacity = self.capacity
-        new_capacity = min(self.max_capacity, self.capacity + by_amount)
-        
-        for i in range(int(new_capacity - old_capacity)):
-            self.particles.append(self._create_particle())
-
-        self.num_particles = int(new_capacity)
-        self.capacity = new_capacity
-
     def _lower_capacity(self, by_amount):
         old_capacity = self.capacity
         new_capacity = max(0, self.capacity - by_amount)
@@ -563,7 +547,7 @@ class ParticleSystem(Widget):
                     self.particles_dict[particle]['translate'].xy = (-1000, 
                         -1000)
                 except:
-                    print 'not rendered yet'
+                    pass
                 if particle_index != self.num_particles - 1:
 
                     next_particle = self.particles[self.num_particles - 1]
@@ -571,14 +555,15 @@ class ParticleSystem(Widget):
                     self.particles[particle_index] = next_particle
 
                 self.num_particles -= 1
-                if self.num_particles == 0:
-                    print 'COMPLETE'
         # reinit new particles
         if self.emission_time > 0:
             time_between_particles = 1.0 / self.emission_rate
             self.frame_time += passed_time
 
             while self.frame_time > 0:
+                if self.capacity < self.max_capacity:
+                    self.particles.append(self._create_particle())
+                    self.capacity += 1
                 if self.num_particles < self.max_capacity:
                     particle = self.particles[self.num_particles]
                     self.num_particles += 1
