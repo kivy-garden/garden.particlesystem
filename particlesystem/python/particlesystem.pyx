@@ -242,7 +242,7 @@ class ParticleSystem(Widget):
     _is_paused = BooleanProperty(False)
 
 
-    def __init__(self, config, **kwargs):
+    def __init__(self, config=None, **kwargs):
         self.particles = list()
         
         self.capacity = 0
