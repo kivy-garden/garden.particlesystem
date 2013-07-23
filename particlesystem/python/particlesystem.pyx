@@ -239,6 +239,7 @@ class ParticleSystem(Widget):
     emitter_type = NumericProperty(0)
     current_scroll = ListProperty((0, 0))
     update_interval = NumericProperty(1./30.)
+    friction = NumericProperty(0.0)
     _is_paused = BooleanProperty(False)
 
 
@@ -483,6 +484,9 @@ class ParticleSystem(Widget):
             radial_x + tangential_x)
         particle.velocity_y += passed_time * (self.gravity_y + 
             radial_y + tangential_y)
+
+        particle.velocity_x -= particle.velocity_x * self.friction
+        particle.velocity_y -= particle.velocity_y * self.friction
 
         particle.x += particle.velocity_x * passed_time
         particle.y += particle.velocity_y * passed_time
