@@ -275,6 +275,7 @@ class ParticleSystem(Widget):
             Clock.unschedule(self._update)
             self.particles_dict = dict()
             self.particles = []
+            self.capacity = 0
             self.canvas.clear()
             
     def on_max_num_particles(self, instance, value):
